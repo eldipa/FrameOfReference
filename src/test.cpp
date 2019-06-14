@@ -132,8 +132,8 @@ public:
 
 void displayUsage() { cout << "run as test nameoffile" << endl; }
 
-vector<uint32_t> loadVector(string filename) {
-  vector<uint32_t> answer;
+vector<uint64_t> loadVector(string filename) {
+  vector<uint64_t> answer;
   answer.reserve(1024 * 32); // expect sizeable arrays
   ifstream logFile(filename.c_str());
   if (!logFile.is_open()) {
@@ -148,7 +148,7 @@ vector<uint32_t> loadVector(string filename) {
                                    // the IO status
   string line;
   for (; logFile && getline(logFile, line);) {
-    uint32_t id = atoi(line.c_str());
+    uint64_t id = std::stoull(line.c_str());
     answer.push_back(id);
   }
   return answer;
@@ -356,12 +356,13 @@ void turbobenchmark(vector<uint32_t> &data) {
   cout << endl;
 }
 
-void turbobenchmark64(vector<uint32_t> &data32) {
+void turbobenchmark64(vector<uint64_t> &data) {
   std::cout << "[turbo benchmark64]" << std::endl;
-  vector<uint64_t> data;
+  /*vector<uint64_t> data;
 
   for (vector<uint32_t>::const_iterator i = data32.begin(); i != data32.end(); ++i)
     data.push_back(*i);
+    */
 
   vector<uint64_t> buffer(data);
 
@@ -386,8 +387,14 @@ void turbobenchmark64(vector<uint32_t> &data32) {
   uint32_t nvalue = 0;
   turbouncompress64(compdata.data(), buffer.data(), nvalue);
   buffer.resize(nvalue);
-  if (buffer != data)
+  if (buffer != data) {
+    for (uint32_t i = 0; i < data.size(); ++i)
+      if (data[i] != buffer[i])
+        cout << "idx: " << i << " original/decompressed: " << data[i]
+             << "/" << buffer[i] << endl;
+
     throw runtime_error("bug");
+  }
 
   double numberofintegers = 0;
   int N = (1 << 28) / data.size();
@@ -445,11 +452,11 @@ int main(int argc, char **argv) {
 #endif
 
   cout << "####### processing " << filename << endl;
-  vector<uint32_t> data = loadVector(filename);
+  vector<uint64_t> data = loadVector(filename);
   cout << endl;
 
-  benchmark(data);
-  turbobenchmark(data);
+  //benchmark(data);
+  //turbobenchmark(data);
   turbobenchmark64(data);
 
   return 0;
